@@ -32,6 +32,32 @@
         color: #ecf0f1;
         margin-top: 10px;
       }
+      .controls {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+      }
+      .control-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .controls label {
+        font-weight: bold;
+      }
+      .controls select {
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 1em;
+      }
       #chart-header {
         display: flex;
         align-items: left;
@@ -148,20 +174,31 @@
         Projeto de Visualização Interativa de Dados
       </h2>
       <h4 style="text-align: center">
-        <u>Grupo F</u>: Felipe Gangorra, Gabriel Carvalho,
-        Leandro Souto, Sara Siqueira, Wanderson Souto&nbsp; &nbsp;
+        <u>Grupo F</u>: Felipe Gangorra, Gabriel Carvalho, Leandro Souto, Sara
+        Siqueira, Wanderson Souto&nbsp; &nbsp;
       </h4>
       <h2 style="text-align: center">
         <span
           style="
             font-family: &#39;Lucida Sans Unicode&#39;, &#39;Lucida Grande&#39;, sans-serif;
           "
-          ><strong>Título da visualização</strong></span
+          ><strong>A Jornada da LEGO Através dos Anos</strong></span
         >
       </h2>
       <p style="text-align: justify; padding: 10px 50px 10px 50px">
         Breve resumo sobre os dados (e as histórias) visualizadas.
       </p>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="theme-filter">Filtrar por Tema:</label>
+        <select id="theme-filter"></select>
+      </div>
+      <div class="control-group">
+        <label for="category-filter">Filtrar por Categoria:</label>
+        <select id="category-filter"></select>
+      </div>
     </div>
 
     <div
@@ -211,8 +248,14 @@
   -->
 
     <script type="text/javascript">
-      var dom = document.getElementById("container");
-      var myChart = echarts.init(dom, null, {
+      const data_from_csv = "lego_sets_clean.csv";
+      const themeFilter = document.getElementById("theme-filter");
+      const categoryFilter = document.getElementById("category-filter");
+      const chart_dom = document.getElementById("container");
+
+      let raw_data = [];
+
+      var myChart = echarts.init(chart_dom, null, {
         renderer: "canvas",
         useDirtyRect: false,
       });
@@ -221,9 +264,85 @@
 
       myChart.showLoading();
 
-      data =
-        '{"nodes":[{"name":"Agricultural \'waste\'"},{"name":"Bio-conversion"},{"name":"Liquid"},{"name":"Losses"},{"name":"Solid"},{"name":"Gas"},{"name":"Biofuel imports"},{"name":"Biomass imports"},{"name":"Coal imports"},{"name":"Coal"},{"name":"Coal reserves"},{"name":"District heating"},{"name":"Industry"},{"name":"Heating and cooling - commercial"},{"name":"Heating and cooling - homes"},{"name":"Electricity grid"},{"name":"Over generation / exports"},{"name":"H2 conversion"},{"name":"Road transport"},{"name":"Agriculture"},{"name":"Rail transport"},{"name":"Lighting & appliances - commercial"},{"name":"Lighting & appliances - homes"},{"name":"Gas imports"},{"name":"Ngas"},{"name":"Gas reserves"},{"name":"Thermal generation"},{"name":"Geothermal"},{"name":"H2"},{"name":"Hydro"},{"name":"International shipping"},{"name":"Domestic aviation"},{"name":"International aviation"},{"name":"National navigation"},{"name":"Marine algae"},{"name":"Nuclear"},{"name":"Oil imports"},{"name":"Oil"},{"name":"Oil reserves"},{"name":"Other waste"},{"name":"Pumped heat"},{"name":"Solar PV"},{"name":"Solar Thermal"},{"name":"Solar"},{"name":"Tidal"},{"name":"UK land based bioenergy"},{"name":"Wave"},{"name":"Wind"}],"links":[{"source": "Agricultural \'waste\'", "target": "Bio-conversion",  "value": 124.729},{"source": "Bio-conversion", "target": "Liquid",  "value": 0.597},{"source": "Bio-conversion",  "target": "Losses",  "value": 26.862},{"source": "Bio-conversion",  "target": "Solid",  "value": 280.322},{"source": "Bio-conversion", "target": "Gas",  "value": 81.144},{"source": "Biofuel imports", "target": "Liquid",  "value": 35},{"source": "Biomass imports", "target": "Solid",  "value": 35},{"source": "Coal imports", "target": "Coal", "value": 11.606},{"source": "Coal reserves","target": "Coal", "value": 63.965},{"source": "Coal", "target": "Solid", "value": 75.571},{"source": "District heating", "target": "Industry", "value": 10.639},{"source": "District heating", "target": "Heating and cooling - commercial", "value": 22.505},{"source": "District heating", "target": "Heating and cooling - homes", "value": 46.184},{"source": "Electricity grid", "target": "Over generation / exports", "value": 104.453},{"source": "Electricity grid", "target": "Heating and cooling - homes", "value": 113.726},{"source": "Electricity grid", "target": "H2 conversion", "value": 27.14},{"source": "Electricity grid", "target": "Industry", "value": 342.165},{"source": "Electricity grid", "target": "Road transport", "value": 37.797},{"source": "Electricity grid", "target": "Agriculture", "value": 4.412},{"source": "Electricity grid", "target": "Heating and cooling - commercial", "value": 40.858},{"source": "Electricity grid", "target": "Losses", "value": 56.691},{"source": "Electricity grid", "target": "Rail transport", "value": 7.863},{"source": "Electricity grid", "target": "Lighting & appliances - commercial", "value": 90.008},{"source": "Electricity grid", "target": "Lighting & appliances - homes", "value": 93.494},{"source": "Gas imports", "target": "Ngas", "value": 40.719},{"source": "Gas reserves", "target": "Ngas", "value": 82.233},{"source": "Gas", "target": "Heating and cooling - commercial", "value": 0.129},{"source": "Gas", "target": "Losses", "value": 1.401},{"source": "Gas", "target": "Thermal generation", "value": 151.891},{"source": "Gas", "target": "Agriculture", "value": 2.096},{"source": "Gas", "target": "Industry", "value": 48.58},{"source": "Geothermal", "target": "Electricity grid", "value": 7.013},{"source": "H2 conversion", "target": "H2", "value": 20.897},{"source": "H2 conversion", "target": "Losses", "value": 6.242},{"source": "H2", "target": "Road transport", "value": 20.897},{"source": "Hydro", "target": "Electricity grid", "value": 6.995},{"source": "Liquid", "target": "Industry", "value": 121.066},{"source": "Liquid", "target": "International shipping", "value": 128.69},{"source": "Liquid", "target": "Road transport", "value": 135.835},{"source": "Liquid", "target": "Domestic aviation", "value": 14.458},{"source": "Liquid", "target": "International aviation", "value": 206.267},{"source": "Liquid", "target": "Agriculture", "value": 3.64},{"source": "Liquid", "target": "National navigation", "value": 33.218},{"source": "Liquid", "target": "Rail transport", "value": 4.413},{"source": "Marine algae", "target": "Bio-conversion", "value": 4.375},{"source": "Ngas", "target": "Gas", "value": 122.952},{"source": "Nuclear", "target": "Thermal generation", "value": 839.978},{"source": "Oil imports", "target": "Oil", "value": 504.287},{"source": "Oil reserves", "target": "Oil", "value": 107.703},{"source": "Oil", "target": "Liquid", "value": 611.99},{"source": "Other waste", "target": "Solid", "value": 56.587},{"source": "Other waste", "target": "Bio-conversion", "value": 77.81},{"source": "Pumped heat", "target": "Heating and cooling - homes", "value": 193.026},{"source": "Pumped heat", "target": "Heating and cooling - commercial", "value": 70.672},{"source": "Solar PV", "target": "Electricity grid", "value": 59.901},{"source": "Solar Thermal", "target": "Heating and cooling - homes", "value": 19.263},{"source": "Solar", "target": "Solar Thermal", "value": 19.263},{"source": "Solar", "target": "Solar PV", "value": 59.901},{"source": "Solid", "target": "Agriculture", "value": 0.882},{"source": "Solid", "target": "Thermal generation", "value": 400.12},{"source": "Solid", "target": "Industry", "value": 46.477},{"source": "Thermal generation", "target": "Electricity grid", "value": 525.531},{"source": "Thermal generation", "target": "Losses", "value": 787.129},{"source": "Thermal generation", "target": "District heating", "value": 79.329},{"source": "Tidal", "target": "Electricity grid", "value": 9.452},{"source": "UK land based bioenergy", "target": "Bio-conversion", "value": 182.01},{"source": "Wave", "target": "Electricity grid", "value": 19.013},{"source": "Wind", "target": "Electricity grid", "value": 289.366}]}';
-      data = JSON.parse(data);
+      function findFieldName(obj, candidates) {
+        if (!obj || typeof obj !== "object") return undefined;
+        const keys = Object.keys(obj);
+        const low = keys.reduce((acc, k) => {
+          acc[k.toLowerCase()] = k;
+          return acc;
+        }, {});
+        for (let cand of candidates)
+          if (low[cand.toLowerCase()]) return low[cand.toLowerCase()];
+        return undefined;
+      }
+
+      function parseCSV(csvText) {
+        const lines = csvText.trim().split("\n");
+        if (lines.length < 2) return [];
+
+        const headers = lines[0].split(";").map((h) => h.trim());
+
+        return lines.slice(1).map((line) => {
+          const values = line.split(";");
+          const entry = {};
+          headers.forEach((header, i) => {
+            entry[header] = values[i] ? values[i].trim() : "";
+          });
+          return entry;
+        });
+      }
+
+      $.get(data_from_csv).done(function (csv_string) {
+        raw_data = parseCSV(csv_string);
+        myChart.hideLoading();
+
+        if (!raw_data || raw_data.length === 0) {
+          alert("O arquivo csv está vazio ou em um formato inválido.");
+          return;
+        }
+
+        const yearField = findFieldName(raw_data[0], ["year"]) || "year";
+        const piecesField = findFieldName(raw_data[0], ["pieces"]) || "pieces";
+        const themeField = findFieldName(raw_data[0], ["theme"]) || "theme";
+        const categoryField =
+          findFieldName(raw_data[0], ["category"]) || "category";
+        const nameField = findFieldName(raw_data[0], ["name"]) || "name";
+
+        const themes = new Set(raw_data.map((set) => set[themeField]))
+        
+        function populateThemeFilter() {
+          const themes = [
+            ...new Set(raw_data.map((set) => set[themeField])),
+          ].sort();
+          themeFilter.innerHTML = '<option value="All">Todos os Temas</option>';
+          themes.forEach((theme) => {
+            if (theme) {
+              const option = document.createElement("option");
+              option.value = theme;
+              option.textContent = theme;
+              themeFilter.appendChild(option);
+            }
+          });
+        }
+
+        function populateCategoryFilter() {
+          const categories = [
+            ...new Set(raw_data.map((set) => set[categoryField])),
+          ].sort();
+          categoryFilter.innerHTML =
+            '<option value="All">Todas as Categorias</option>';
+          categories.forEach((category) => {
+            if (category) {
+              const option = document.createElement("option");
+              option.value = category;
+              option.textContent = category;
+              categoryFilter.appendChild(option);
+            }
+          });
+        }
+        populateThemeFilter();
+        populateCategoryFilter();
+      });
 
       myChart.hideLoading();
       myChart.setOption(
