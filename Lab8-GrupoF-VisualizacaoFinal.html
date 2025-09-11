@@ -308,12 +308,22 @@
           findFieldName(raw_data[0], ["category"]) || "category";
         const nameField = findFieldName(raw_data[0], ["name"]) || "name";
 
-        const themes = new Set(raw_data.map((set) => set[themeField]))
-        
-        function populateThemeFilter() {
+        const themes = new Set(raw_data.map((set) => set[themeField]));
+
+        function populateThemeFilter(selectedCategory) {
+          let dataForThemes = raw_data;
+
+          if (selectedCategory && selectedCategory !== "All") {
+            dataForThemes = raw_data.filter(
+              (set) => set[categoryField] === selectedCategory
+            );
+          }
+
           const themes = [
-            ...new Set(raw_data.map((set) => set[themeField])),
+            ...new Set(dataForThemes.map((set) => set[themeField])),
           ].sort();
+
+          const previouslySelectedTheme = themeFilter.value;
           themeFilter.innerHTML = '<option value="All">Todos os Temas</option>';
           themes.forEach((theme) => {
             if (theme) {
@@ -323,6 +333,10 @@
               themeFilter.appendChild(option);
             }
           });
+
+          if (themes.includes(previouslySelectedTheme)) {
+            themeFilter.value = previouslySelectedTheme;
+          }
         }
 
         function populateCategoryFilter() {
@@ -340,8 +354,14 @@
             }
           });
         }
-        populateThemeFilter();
+
+        categoryFilter.addEventListener("change", () => {
+          const selectedCategory = categoryFilter.value;
+          populateThemeFilter(selectedCategory);
+        });
+
         populateCategoryFilter();
+        populateThemeFilter("All");
       });
 
       myChart.hideLoading();
