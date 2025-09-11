@@ -314,7 +314,9 @@
             findFieldName(rawData[0], ["category"]) || "category";
           const nameField = findFieldName(rawData[0], ["name"]) || "name";
 
-          const themes = new Set(rawData.map((set) => set[themeField]));
+          rawData = rawData.filter((set) => {
+            return set[themeField] && set[categoryField] && set[piecesField];
+          });
 
           function populateThemeFilter(selectedCategory) {
             let dataForThemes = rawData;
@@ -415,7 +417,7 @@
             const avgPieces = years.map((year) => {
               const data = yearFilteredData[year];
               return data.setCount > 0
-                ? parseInt(data.totalPieces / data.setCount)
+                ? Math.ceil(data.totalPieces / data.setCount)
                 : 0;
             }); //Média de peças por set para cada ano
             const largestSets = years.map(
