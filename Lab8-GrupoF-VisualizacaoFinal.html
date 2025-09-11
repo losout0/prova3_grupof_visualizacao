@@ -277,6 +277,11 @@
       }
 
       function parseCSV(csvText) {
+        if (csvText.charCodeAt(0) === 0xfeff) {
+          csvText = csvText.slice(1);
+        }
+        csvText = csvText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
         const lines = csvText.trim().split("\n");
         if (lines.length < 2) return [];
 
@@ -421,11 +426,41 @@
               //Toda a lógica do gráfico aqui
               title: {},
               legend: {},
-              xAxis: {},
-              yAxis: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              xAxis: {
+                type: "category",
+                data: years,
+              },
+              yAxis: [
+                {
+                  type: "value",
+                  name: "Quantidade de sets",
+                  position: "left",
+                  axisLabel: { formatter: "{value}" },
+                },
+                {
+                  type: "value",
+                  name: "Média de peças por set",
+                  position: "right",
+                  axisLabel: { formatter: "{value} peças" },
+                },
+              ], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
               tooltip: {},
               datazoom: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
-              series: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              series: [
+                {
+                  name: "Quantidade de Sets",
+                  type: "bar",
+                  data: setCounts,
+                  itemStyle: { color: "#0055a8" },
+                },
+                {
+                  name: "Média de Peças",
+                  type: "line",
+                  yAxisIndex: 1,
+                  data: avgPieces,
+                  itemStyle: { color: "#d90000" },
+                },
+              ], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
             };
 
             myChart.setOption(option, true);
