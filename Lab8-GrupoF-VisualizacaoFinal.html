@@ -374,8 +374,7 @@
                     (set) => set[themeField] === selectedTheme
                   );
 
-            
-            let yearFilteredData = {};
+            const yearFilteredData = {};
 
             themeFilteredData.forEach((set) => {
               const year = set[yearField];
@@ -391,13 +390,13 @@
                   totalPieces: 0,
                   largestSet: { name: "N/A", pieces: -1 },
                 };
-              };
+              }
 
               yearFilteredData[year].setCount++;
               yearFilteredData[year].totalPieces += pieces;
 
               if (pieces > yearFilteredData[year].largestSet.pieces) {
-                yearFilteredData.largestSet = {
+                yearFilteredData[year].largestSet = {
                   name: set[nameField],
                   pieces: pieces,
                 };
@@ -405,9 +404,18 @@
             });
 
             const years = Object.keys(yearFilteredData).sort(); //lista com todos os anos em que houve lançamento para os filtros aplicados
-            const setCounts = {}; //Lista com o ano e a quantidade de sets
-            const avgPieces = {}; //Média de peças por set para cada ano
-            const largestSets = {}; //Uma lista com o ano e o set com o maior número de peças
+            const setCounts = years.map(
+              (year) => yearFilteredData[year].setCount
+            ); //Lista com o ano e a quantidade de sets
+            const avgPieces = years.map((year) => {
+              const data = yearFilteredData[year];
+              return data.setCount > 0
+                ? parseInt(data.totalPieces / data.setCount)
+                : 0;
+            }); //Média de peças por set para cada ano
+            const largestSets = years.map(
+              (year) => yearFilteredData[year].largestSet
+            ); //Uma lista com o ano e o set com o maior número de peças
 
             const option = {
               //Toda a lógica do gráfico aqui
