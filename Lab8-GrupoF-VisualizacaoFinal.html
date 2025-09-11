@@ -427,7 +427,9 @@
             const option = {
               //Toda a lógica do gráfico aqui
               title: {},
-              legend: {},
+              legend: {
+                data: ["Quantidade de Sets", "Média de Peças"],
+              },
               xAxis: {
                 type: "category",
                 data: years,
@@ -446,7 +448,24 @@
                   axisLabel: { formatter: "{value} peças" },
                 },
               ],
-              tooltip: {},
+              tooltip: {
+                trigger: "axis",
+                axisPointer: { type: "cross" },
+                formatter: function (params) {
+                  if (!params || params.length < 2) return "";
+                  const yearIndex = params[0].dataIndex;
+                  const year = years[yearIndex];
+                  const setCount = params[0].value;
+                  const avgPiece = params[1].value;
+                  const largest = largestSets[yearIndex];
+                  return (
+                    `<b>Ano: ${year}</b><br/>` +
+                    `Total de Sets: ${setCount}<br/>` +
+                    `Média de Peças: ${avgPiece}<br/>` +
+                    `Maior Set: ${largest.name} (${largest.pieces} peças)`
+                  );
+                },
+              },
               dataZoom: [
                 { type: "slider", start: 0, end: 100 },
                 { type: "inside", start: 0, end: 100 },
@@ -465,7 +484,7 @@
                   data: avgPieces,
                   itemStyle: { color: "#d90000" },
                 },
-              ], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              ],
             };
 
             myChart.setOption(option, true);
