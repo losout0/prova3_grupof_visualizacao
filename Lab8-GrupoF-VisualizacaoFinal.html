@@ -277,6 +277,11 @@
       }
 
       function parseCSV(csvText) {
+        if (csvText.charCodeAt(0) === 0xfeff) {
+          csvText = csvText.slice(1);
+        }
+        csvText = csvText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
         const lines = csvText.trim().split("\n");
         if (lines.length < 2) return [];
 
@@ -361,24 +366,101 @@
           // A geração do gráfico faz sentido ser dentro do updateChart, visto que essa função está no listener
 
           function updateChart(selectedTheme, selectedCategory) {
-            const categoryfilteredData = none; //Se selectedCategory === "All", inclui todos
-            const themeFilteredData = none; //Esse depende do de cima; Se o selectedTheme === "All", inclui todos
-            const yearFilteredData = {}; //Esse depende do de cima
+            const categoryFilteredData =
+              selectedCategory === "All"
+                ? rawData
+                : rawData.filter(
+                    (set) => set[categoryField] === selectedCategory
+                  );
+            const themeFilteredData =
+              selectedTheme === "All"
+                ? categoryFilteredData
+                : categoryFilteredData.filter(
+                    (set) => set[themeField] === selectedTheme
+                  );
 
-            const years = []; //lista com todos os anos em que houve lançamento para os filtros aplicados
-            const setCounts = {}; //Lista com o ano e a quantidade de sets
-            const avgPieces = {}; //Média de peças por set para cada ano
-            const largestSets = {}; //Uma lista com o ano e o set com o maior número de peças
+            const yearFilteredData = {};
+
+            themeFilteredData.forEach((set) => {
+              const year = set[yearField];
+              const pieces = set[piecesField]
+                ? parseFloat(set[piecesField])
+                : 0;
+
+              if (!year || isNaN(pieces)) return;
+
+              if (!yearFilteredData[year]) {
+                yearFilteredData[year] = {
+                  setCount: 0,
+                  totalPieces: 0,
+                  largestSet: { name: "N/A", pieces: -1 },
+                };
+              }
+
+              yearFilteredData[year].setCount++;
+              yearFilteredData[year].totalPieces += pieces;
+
+              if (pieces > yearFilteredData[year].largestSet.pieces) {
+                yearFilteredData[year].largestSet = {
+                  name: set[nameField],
+                  pieces: pieces,
+                };
+              }
+            });
+
+            const years = Object.keys(yearFilteredData).sort(); //lista com todos os anos em que houve lançamento para os filtros aplicados
+            const setCounts = years.map(
+              (year) => yearFilteredData[year].setCount
+            ); //Lista com o ano e a quantidade de sets
+            const avgPieces = years.map((year) => {
+              const data = yearFilteredData[year];
+              return data.setCount > 0
+                ? parseInt(data.totalPieces / data.setCount)
+                : 0;
+            }); //Média de peças por set para cada ano
+            const largestSets = years.map(
+              (year) => yearFilteredData[year].largestSet
+            ); //Uma lista com o ano e o set com o maior número de peças
 
             const option = {
               //Toda a lógica do gráfico aqui
               title: {},
               legend: {},
-              xAxis: {},
-              yAxis: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              xAxis: {
+                type: "category",
+                data: years,
+              },
+              yAxis: [
+                {
+                  type: "value",
+                  name: "Quantidade de sets",
+                  position: "left",
+                  axisLabel: { formatter: "{value}" },
+                },
+                {
+                  type: "value",
+                  name: "Média de peças por set",
+                  position: "right",
+                  axisLabel: { formatter: "{value} peças" },
+                },
+              ], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
               tooltip: {},
               datazoom: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
-              series: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              series: [
+                {
+                  name: "Quantidade de Sets",
+                  type: "bar",
+                  data: setCounts,
+                  itemStyle: { color: "#0055a8" },
+                },
+                {
+                  name: "Média de Peças",
+                  type: "line",
+                  yAxisIndex: 1,
+                  data: avgPieces,
+                  itemStyle: { color: "#d90000" },
+                },
+              ], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
             };
 
             myChart.setOption(option, true);
