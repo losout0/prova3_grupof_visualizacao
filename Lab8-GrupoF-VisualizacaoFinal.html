@@ -248,14 +248,14 @@
   -->
 
     <script type="text/javascript">
-      const data_from_csv = "lego_sets_clean.csv";
+      const dataFromCSV = "lego_sets_clean.csv";
       const themeFilter = document.getElementById("theme-filter");
       const categoryFilter = document.getElementById("category-filter");
-      const chart_dom = document.getElementById("container");
+      const chartDom = document.getElementById("container");
 
-      let raw_data = [];
+      let rawData = [];
 
-      var myChart = echarts.init(chart_dom, null, {
+      var myChart = echarts.init(chartDom, null, {
         renderer: "canvas",
         useDirtyRect: false,
       });
@@ -292,112 +292,127 @@
         });
       }
 
-      $.get(data_from_csv).done(function (csv_string) {
-        raw_data = parseCSV(csv_string);
-        myChart.hideLoading();
+      $.get(dataFromCSV)
+        .done(function (csv_string) {
+          rawData = parseCSV(csv_string);
+          myChart.hideLoading();
 
-        if (!raw_data || raw_data.length === 0) {
-          alert("O arquivo csv está vazio ou em um formato inválido.");
-          return;
-        }
-
-        const yearField = findFieldName(raw_data[0], ["year"]) || "year";
-        const piecesField = findFieldName(raw_data[0], ["pieces"]) || "pieces";
-        const themeField = findFieldName(raw_data[0], ["theme"]) || "theme";
-        const categoryField =
-          findFieldName(raw_data[0], ["category"]) || "category";
-        const nameField = findFieldName(raw_data[0], ["name"]) || "name";
-
-        const themes = new Set(raw_data.map((set) => set[themeField]));
-
-        function populateThemeFilter(selectedCategory) {
-          let dataForThemes = raw_data;
-
-          if (selectedCategory && selectedCategory !== "All") {
-            dataForThemes = raw_data.filter(
-              (set) => set[categoryField] === selectedCategory
-            );
+          if (!rawData || rawData.length === 0) {
+            alert("O arquivo csv está vazio ou em um formato inválido.");
+            return;
           }
 
-          const themes = [
-            ...new Set(dataForThemes.map((set) => set[themeField])),
-          ].sort();
+          const yearField = findFieldName(rawData[0], ["year"]) || "year";
+          const piecesField = findFieldName(rawData[0], ["pieces"]) || "pieces";
+          const themeField = findFieldName(rawData[0], ["theme"]) || "theme";
+          const categoryField =
+            findFieldName(rawData[0], ["category"]) || "category";
+          const nameField = findFieldName(rawData[0], ["name"]) || "name";
 
-          const previouslySelectedTheme = themeFilter.value;
-          themeFilter.innerHTML = '<option value="All">Todos os Temas</option>';
-          themes.forEach((theme) => {
-            if (theme) {
-              const option = document.createElement("option");
-              option.value = theme;
-              option.textContent = theme;
-              themeFilter.appendChild(option);
+          const themes = new Set(rawData.map((set) => set[themeField]));
+
+          function populateThemeFilter(selectedCategory) {
+            let dataForThemes = rawData;
+
+            if (selectedCategory && selectedCategory !== "All") {
+              dataForThemes = rawData.filter(
+                (set) => set[categoryField] === selectedCategory
+              );
             }
-          });
 
-          if (themes.includes(previouslySelectedTheme)) {
-            themeFilter.value = previouslySelectedTheme;
+            const themes = [
+              ...new Set(dataForThemes.map((set) => set[themeField])),
+            ].sort();
+
+            const previouslySelectedTheme = themeFilter.value;
+            themeFilter.innerHTML =
+              '<option value="All">Todos os Temas</option>';
+            themes.forEach((theme) => {
+              if (theme) {
+                const option = document.createElement("option");
+                option.value = theme;
+                option.textContent = theme;
+                themeFilter.appendChild(option);
+              }
+            });
+
+            if (themes.includes(previouslySelectedTheme)) {
+              themeFilter.value = previouslySelectedTheme;
+            }
           }
-        }
 
-        function populateCategoryFilter() {
-          const categories = [
-            ...new Set(raw_data.map((set) => set[categoryField])),
-          ].sort();
-          categoryFilter.innerHTML =
-            '<option value="All">Todas as Categorias</option>';
-          categories.forEach((category) => {
-            if (category) {
-              const option = document.createElement("option");
-              option.value = category;
-              option.textContent = category;
-              categoryFilter.appendChild(option);
-            }
+          function populateCategoryFilter() {
+            const categories = [
+              ...new Set(rawData.map((set) => set[categoryField])),
+            ].sort();
+            categoryFilter.innerHTML =
+              '<option value="All">Todas as Categorias</option>';
+            categories.forEach((category) => {
+              if (category) {
+                const option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+              }
+            });
+          }
+
+          // ---------------------------------- adicionar a geração do gráfico aqui ------------------------------------
+          // A geração do gráfico faz sentido ser dentro do updateChart, visto que essa função está no listener
+
+          function updateChart(selectedTheme, selectedCategory) {
+            const categoryfilteredData = none; //Se selectedCategory === "All", inclui todos
+            const themeFilteredData = none; //Esse depende do de cima; Se o selectedTheme === "All", inclui todos
+            const yearFilteredData = {}; //Esse depende do de cima
+
+            const years = []; //lista com todos os anos em que houve lançamento para os filtros aplicados
+            const setCounts = {}; //Lista com o ano e a quantidade de sets
+            const avgPieces = {}; //Média de peças por set para cada ano
+            const largestSets = {}; //Uma lista com o ano e o set com o maior número de peças
+
+            const option = {
+              //Toda a lógica do gráfico aqui
+              title: {},
+              legend: {},
+              xAxis: {},
+              yAxis: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              tooltip: {},
+              datazoom: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              series: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+            };
+
+            myChart.setOption(option, true);
+          }
+
+          // -----------------------------------------------------------------------------------------------------------
+
+          categoryFilter.addEventListener("change", () => {
+            const selectedCategory = categoryFilter.value;
+            populateThemeFilter(selectedCategory);
+            updateChart(themeFilter.value, selectedCategory);
           });
-        }
 
-        // ---------------------------------- adicionar a geração do gráfico aqui ------------------------------------
-        // A geração do gráfico faz sentido ser dentro do updateChart, visto que essa função está no listener
+          themeFilter.addEventListener("change", () => {
+            updateChart(themeFilter.value, categoryFilter.value);
+          });
 
-        function updateChart(selectedTheme, selectedCategory) {
-          const categoryfilteredData = none; //Se selectedCategory === "All", inclui todos
-          const themeFilteredData = none; //Esse depende do de cima; Se o selectedTheme === "All", inclui todos
-          const yearFilteredData = {};//Esse depende do de cima
-
-          const years = []; //lista com todos os anos em que houve lançamento para os filtros aplicados
-          const setCounts = {}; //Lista com o ano e a quantidade de sets
-          const avgPieces = {}; //Média de peças por set para cada ano
-          const largestSets = {}; //Uma lista com o ano e o set com o maior número de peças
-
-          const option = {
-            //Toda a lógica do gráfico aqui
-            title: {},
-            legend: {},
-            xAxis: {},
-            yAxis: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
-            tooltip: {},
-            datazoom: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
-            series: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
-          };
-
-          myChart.setOption(option, true);
-        }
-
-        // -----------------------------------------------------------------------------------------------------------
-
-        categoryFilter.addEventListener("change", () => {
-          const selectedCategory = categoryFilter.value;
-          populateThemeFilter(selectedCategory);
-          updateChart(themeFilter.value, selectedCategory);
+          populateCategoryFilter();
+          populateThemeFilter("All");
+          updateChart("All", "All");
+        })
+        .fail(function (jqXHR, textStatus, errorThrown) {
+          myChart.hideLoading();
+          console.error(
+            "Erro ao carregar os dados do CSV:",
+            textStatus,
+            errorThrown
+          );
+          chartDom.innerHTML = `<div style="padding: 20px; text-align: center; color: #c0392b; background-color: #fdd; border: 1px solid #c0392b; border-radius: 8px;">
+                        <h2>Opa! Algo deu errado ao carregar os dados.</h2>
+                        <p>Verifique se o arquivo <strong>lego_data.csv</strong> está na mesma pasta que este arquivo HTML.</p>
+                        <p><strong>Importante:</strong> Lembre-se de rodar esta página a partir de um servidor web local (<code>python -m http.server</code>) para que o navegador possa carregar o arquivo.</p>
+                    </div>`;
         });
-
-        themeFilter.addEventListener("change", () => {
-          updateChart(themeFilter.value, categoryFilter.value);
-        });
-
-        populateCategoryFilter();
-        populateThemeFilter("All");
-        updateChart('All', 'All');
-      });
 
       window.addEventListener("resize", myChart.resize);
     </script>
