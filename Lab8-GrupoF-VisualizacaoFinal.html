@@ -361,11 +361,50 @@
           // A geração do gráfico faz sentido ser dentro do updateChart, visto que essa função está no listener
 
           function updateChart(selectedTheme, selectedCategory) {
-            const categoryfilteredData = none; //Se selectedCategory === "All", inclui todos
-            const themeFilteredData = none; //Esse depende do de cima; Se o selectedTheme === "All", inclui todos
-            const yearFilteredData = {}; //Esse depende do de cima
+            const categoryFilteredData =
+              selectedCategory === "All"
+                ? rawData
+                : rawData.filter(
+                    (set) => set[categoryField] === selectedCategory
+                  );
+            const themeFilteredData =
+              selectedTheme === "All"
+                ? categoryFilteredData
+                : categoryFilteredData.filter(
+                    (set) => set[themeField] === selectedTheme
+                  );
 
-            const years = []; //lista com todos os anos em que houve lançamento para os filtros aplicados
+            
+            let yearFilteredData = {};
+
+            themeFilteredData.forEach((set) => {
+              const year = set[yearField];
+              const pieces = set[piecesField]
+                ? parseFloat(set[piecesField])
+                : 0;
+
+              if (!year || isNaN(pieces)) return;
+
+              if (!yearFilteredData[year]) {
+                yearFilteredData[year] = {
+                  setCount: 0,
+                  totalPieces: 0,
+                  largestSet: { name: "N/A", pieces: -1 },
+                };
+              };
+
+              yearFilteredData[year].setCount++;
+              yearFilteredData[year].totalPieces += pieces;
+
+              if (pieces > yearFilteredData[year].largestSet.pieces) {
+                yearFilteredData.largestSet = {
+                  name: set[nameField],
+                  pieces: pieces,
+                };
+              }
+            });
+
+            const years = Object.keys(yearFilteredData).sort(); //lista com todos os anos em que houve lançamento para os filtros aplicados
             const setCounts = {}; //Lista com o ano e a quantidade de sets
             const avgPieces = {}; //Média de peças por set para cada ano
             const largestSets = {}; //Uma lista com o ano e o set com o maior número de peças
