@@ -445,9 +445,12 @@
                   position: "right",
                   axisLabel: { formatter: "{value} peças" },
                 },
-              ], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              ],
               tooltip: {},
-              datazoom: [{}], //Esses que coloquei um array é porque devido a nossa especificação, possui mais de um objeto
+              dataZoom: [
+                { type: "slider", start: 0, end: 100 },
+                { type: "inside", start: 0, end: 100 },
+              ],
               series: [
                 {
                   name: "Quantidade de Sets",
